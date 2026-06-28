@@ -1482,17 +1482,21 @@ function bindEvents() {
   document.getElementById('wGoBtn').addEventListener('click', function(){
     const name = document.getElementById('wCustomCity').value.trim();
     if(!name){ toast('请输入城市名'); return; }
-    var geo = new AMap.Geocoder();
-    geo.getLocation(name, function(status, result) {
-      if (status === 'complete' && result.geocodes && result.geocodes.length > 0) {
-        var loc = result.geocodes[0].location;
-        var c = { name: name, lat: loc.lat, lng: loc.lng, zoom: 12 };
+    document.getElementById('welcome').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    var ds = new AMap.DistrictSearch({ level: 'city', extensions: 'base', subdistrict: 0 });
+    ds.search(name, function(status, result) {
+      if (status === 'complete' && result.districtList && result.districtList.length > 0) {
+        var center = result.districtList[0].center;
+        var c = { name: name, lat: center.lat, lng: center.lng, zoom: 12 };
         if(!userCities.find(function(uc){ return uc.name === name; })){ userCities.push(c); saveLocal(); if(supabaseReady) syncCities(); }
-        document.getElementById('welcome').classList.add('hidden');
-        document.getElementById('app').classList.add('visible');
         enterCity(name, c.lat, c.lng, c.zoom);
         updateWelcomeCities();
-      } else { toast('找不到这个城市，换个写法试试'); }
+      } else {
+        toast('找不到这个城市，换个写法试试');
+        document.getElementById('welcome').classList.remove('hidden');
+        document.getElementById('app').classList.remove('visible');
+      }
     });
   });
   document.getElementById('wCustomCity').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('wGoBtn').click(); });
