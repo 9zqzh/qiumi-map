@@ -1150,28 +1150,27 @@ function updateCityBar() {
   if (addBtn) addBtn.addEventListener('click', showAddCityModal);
 }
 
-async function showAddCityModal() {
+function showAddCityModal() {
   showModal('🏙️ 添加城市',
     `<div class="modal-field"><div class="modal-label">城市名称</div><input class="modal-input" id="mCityName" placeholder="例如：南京"></div>
     <p style="font-size:11px;opacity:0.4;text-align:center;">系统会自动定位城市中心</p>
     <div class="modal-btns">
       <button class="modal-btn secondary" onclick="window._closeM()">取消</button>
       <button class="modal-btn primary" id="mConfirmCity">定位城市</button></div>`);
-  document.getElementById('mConfirmCity').addEventListener('click', async function(){
+  document.getElementById('mConfirmCity').addEventListener('click', function(){
     const name = document.getElementById('mCityName').value.trim();
     if(!name){ toast('请输入城市名'); return; }
-    try {
-      const resp = await fetch(`https://restapi.amap.com/v3/geocode/geo?key=a64ece2b58082b36fdabbebca6fc9b8d&address=${encodeURIComponent(name)}&city=中国`);
-      const data = await resp.json();
-      if(data.status==='1' && data.geocodes.length>0){
-        const loc = data.geocodes[0].location.split(',');
-        const c = { name, lat:parseFloat(loc[1]), lng:parseFloat(loc[0]), zoom:12 };
-        if(!userCities.find(uc=>uc.name===name)) userCities.push(c);
+    var geo = new AMap.Geocoder();
+    geo.getLocation(name, function(status, result) {
+      if (status === 'complete' && result.geocodes && result.geocodes.length > 0) {
+        var loc = result.geocodes[0].location;
+        var c = { name: name, lat: loc.lat, lng: loc.lng, zoom: 12 };
+        if(!userCities.find(function(uc){ return uc.name === name; })) userCities.push(c);
         saveLocal(); updateWelcomeCities(); closeModal();
         if(supabaseReady) syncCities();
         enterCity(name, c.lat, c.lng, c.zoom);
       } else { toast('找不到这个城市，请换个写法试试'); }
-    } catch(e){ toast('定位失败，请检查网络'); }
+    });
   });
 }
 
@@ -1480,22 +1479,21 @@ function bindEvents() {
     updateWelcomeCities();
   });
 
-  document.getElementById('wGoBtn').addEventListener('click', async function(){
+  document.getElementById('wGoBtn').addEventListener('click', function(){
     const name = document.getElementById('wCustomCity').value.trim();
     if(!name){ toast('请输入城市名'); return; }
-    try {
-      const resp = await fetch(`https://restapi.amap.com/v3/geocode/geo?key=a64ece2b58082b36fdabbebca6fc9b8d&address=${encodeURIComponent(name)}&city=中国`);
-      const data = await resp.json();
-      if(data.status==='1' && data.geocodes.length>0){
-        const loc = data.geocodes[0].location.split(',');
-        const c = { name, lat:parseFloat(loc[1]), lng:parseFloat(loc[0]), zoom:12 };
-        if(!userCities.find(uc=>uc.name===name)){ userCities.push(c); saveLocal(); if(supabaseReady) syncCities(); }
+    var geo = new AMap.Geocoder();
+    geo.getLocation(name, function(status, result) {
+      if (status === 'complete' && result.geocodes && result.geocodes.length > 0) {
+        var loc = result.geocodes[0].location;
+        var c = { name: name, lat: loc.lat, lng: loc.lng, zoom: 12 };
+        if(!userCities.find(function(uc){ return uc.name === name; })){ userCities.push(c); saveLocal(); if(supabaseReady) syncCities(); }
         document.getElementById('welcome').classList.add('hidden');
         document.getElementById('app').classList.add('visible');
         enterCity(name, c.lat, c.lng, c.zoom);
         updateWelcomeCities();
       } else { toast('找不到这个城市，换个写法试试'); }
-    } catch(e){ toast('定位失败，请检查网络'); }
+    });
   });
   document.getElementById('wCustomCity').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('wGoBtn').click(); });
 
