@@ -1,0 +1,16 @@
+{
+  "name": "秋米小地图",
+  "short_name": "秋米小地图",
+  "description": "移动端优先的地图标记工具",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FAF5EE",
+  "theme_color": "#CC7540",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23FFE0C0'/><ellipse cx='50' cy='72' rx='22' ry='18' fill='%23FDF5E6'/><ellipse cx='50' cy='42' rx='20' ry='17' fill='%23FDF5E6'/><polygon points='33,34 36,18 44,28' fill='%238B5E3C'/><polygon points='67,34 64,18 56,28' fill='%238B5E3C'/><ellipse cx='50' cy='45' rx='12' ry='9' fill='%238B5E3C'/><ellipse cx='44' cy='40' rx='5' ry='5.5' fill='%234DB6E8'/><ellipse cx='56' cy='40' rx='5' ry='5.5' fill='%234DB6E8'/><polygon points='50,44 47,48 53,48' fill='%23F5B8A0'/></svg>",
+      "sizes": "100x100",
+      "type": "image/svg+xml"
+    }
+  ]
+}

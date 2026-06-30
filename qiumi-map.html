@@ -2,16 +2,11 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>秋米小地图</title>
-
-<!-- Google Fonts -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
-
 <style>
-/* ============================================================
-   品牌设计系统 — 照搬现有 qiumi-map.html，不得修改
-   ============================================================ */
 :root { color-scheme: light; }
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
@@ -23,10 +18,6 @@
   --font-display: 'ZCOOL KuaiLe', cursive;
   --font-body: 'Nunito', sans-serif;
 }
-
-/* ============================================================
-   动画 — 照搬现有
-   ============================================================ */
 @keyframes wobbleIn {
   0% { transform: scale(0) rotate(-15deg); opacity: 0; }
   60% { transform: scale(1.15) rotate(3deg); opacity: 1; }
@@ -44,18 +35,10 @@
   0%, 90%, 100% { transform: scaleY(1); }
   95% { transform: scaleY(0.1); }
 }
-
-/* ============================================================
-   全局
-   ============================================================ */
 body {
   font-family: var(--font-body); background: var(--cream); color: var(--ink);
   height: 100vh; width: 100vw; overflow: hidden; -webkit-font-smoothing: antialiased;
 }
-
-/* ============================================================
-   Welcome Screen — 照搬现有
-   ============================================================ */
 .welcome-overlay {
   position: fixed; inset: 0; z-index: 9999;
   background: var(--cream);
@@ -106,73 +89,17 @@ body {
   box-shadow: 0 4px 14px var(--shadow-warm);
 }
 .welcome-confirm:hover { background: var(--ember); transform: translateY(-2px); }
-
-/* ============================================================
-   App Container & Map
-   ============================================================ */
 .app-container { display: none; width: 100%; height: 100%; position: relative; }
 .app-container.visible { display: block; }
 #map { width: 100%; height: 100%; background: var(--cream); }
-
-/* ============================================================
-   高德地图缩放控件覆盖
-   ============================================================ */
-.amap-zoom-touch-plus, .amap-zoom-touch-minus {
-  background: var(--cream) !important; color: var(--ink) !important;
-  border: 2px solid var(--wheat) !important; border-radius: 50% !important;
-  width: 36px !important; height: 36px !important; line-height: 32px !important;
-  font-family: var(--font-body) !important; font-size: 20px !important;
-  box-shadow: 0 2px 8px var(--shadow-warm) !important;
-}
-.amap-zoom-touch-plus:hover, .amap-zoom-touch-minus:hover {
-  background: var(--clay) !important; color: #fff !important; border-color: var(--clay) !important;
-}
-
-/* ============================================================
-   高德弹出信息窗覆盖
-   ============================================================ */
-.amap-info-content {
-  background: var(--paper) !important;
-  border-radius: var(--radius) !important;
-  border: 2px solid var(--wheat) !important;
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius) !important; background: var(--paper) !important;
   box-shadow: 0 8px 30px var(--shadow-deep) !important;
-  font-family: var(--font-body) !important; padding: 14px !important;
-}
-.amap-info-sharp {
-  border-top-color: var(--wheat) !important;
-}
-.amap-info-close {
-  color: var(--clay) !important; font-size: 20px !important;
-}
-
-/* ============================================================
-   高德自动补全面板样式覆盖（搜索下拉）
-   ============================================================ */
-.amap-sug-result {
-  z-index: 2000 !important;
-  border-radius: var(--radius) !important;
   border: 2px solid var(--wheat) !important;
-  background: var(--cream) !important;
-  box-shadow: 0 8px 30px var(--shadow-deep) !important;
-  font-family: var(--font-body) !important;
-  overflow: hidden !important;
+  font-family: var(--font-body) !important; padding: 4px !important;
 }
-.amap-sug-result .auto-item {
-  padding: 12px 16px !important;
-  font-size: 14px !important;
-  color: var(--ink) !important;
-  border-bottom: 1px dashed var(--wheat) !important;
-  font-family: var(--font-body) !important;
-}
-.amap-sug-result .auto-item:hover,
-.amap-sug-result .auto-item.cur {
-  background: var(--blush) !important;
-  color: var(--ink) !important;
-}
-
-/* ============================================================
-   Top Bar — 照搬现有（毛玻璃胶囊）
-   ============================================================ */
+.leaflet-popup-tip { background: var(--paper) !important; border: 2px solid var(--wheat) !important; }
+.leaflet-popup-close-button { color: var(--clay) !important; font-size: 22px !important; }
 .top-bar {
   position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
   z-index: 1000; display: flex; gap: 10px; align-items: center;
@@ -198,7 +125,28 @@ body {
 .search-input:focus { border-color: var(--clay); width: 320px; }
 .search-input::placeholder { color: #C4B8A8; font-style: italic; }
 .search-icon { position: absolute; right: 14px; font-size: 16px; color: var(--clay); pointer-events: none; }
-
+.search-source-tag {
+  position: absolute; left: 14px; bottom: -8px; font-size: 9px;
+  background: var(--sage); color: #fff; padding: 1px 6px; border-radius: 6px;
+  opacity: 0; transition: opacity 0.2s;
+}
+.search-source-tag.visible { opacity: 1; }
+.search-results {
+  display: none; position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+  background: var(--cream); border: 2px solid var(--wheat); border-radius: var(--radius);
+  max-height: 300px; overflow-y: auto;
+  box-shadow: 0 8px 24px var(--shadow-deep); z-index: 1001;
+}
+.search-results.active { display: block; animation: floatUp 0.25s ease; }
+.search-result-item {
+  padding: 12px 16px; cursor: pointer; border-bottom: 1px dashed var(--wheat);
+  transition: background 0.15s ease; font-size: 14px; color: var(--ink);
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--blush); }
+.search-result-item .result-name { font-weight: 700; }
+.search-result-item .result-addr { font-size: 12px; opacity: 0.5; margin-top: 2px; }
+.search-result-item .result-type { font-size: 10px; background: var(--wheat); padding: 1px 6px; border-radius: 4px; margin-left: 6px; }
 .top-actions { display: flex; gap: 6px; }
 .top-btn {
   width: 38px; height: 38px; border-radius: 50%;
@@ -214,10 +162,6 @@ body {
   padding: 3px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none;
 }
 .top-btn:hover .tooltip-text { display: block; }
-
-/* ============================================================
-   City Switcher
-   ============================================================ */
 .city-switcher {
   position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
   z-index: 999; display: flex; gap: 6px; flex-wrap: wrap;
@@ -244,10 +188,6 @@ body {
 }
 .city-pill:hover .del-pill, .city-pill.active .del-pill { display: flex; }
 .city-pill-add { border-style: dashed; color: var(--sky); font-family: var(--font-body); font-size: 14px; }
-
-/* ============================================================
-   Bottom Sheet — 照搬现有
-   ============================================================ */
 .bottom-sheet {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 900;
   background: var(--paper); border-radius: 28px 28px 0 0;
@@ -272,8 +212,6 @@ body {
 .sheet-title { font-family: var(--font-display); font-size: 22px; color: var(--clay); }
 .sheet-count { font-size: 13px; opacity: 0.5; }
 .sheet-content { flex: 1; overflow-y: auto; padding: 0 20px 20px; -webkit-overflow-scrolling: touch; }
-
-/* 分类筛选 */
 .cat-filters { display: flex; gap: 8px; flex-wrap: wrap; padding-bottom: 14px; }
 .cat-pill {
   padding: 6px 14px; border-radius: 50px; border: 2px solid var(--wheat);
@@ -282,13 +220,10 @@ body {
 }
 .cat-pill:hover { border-color: var(--clay); }
 .cat-pill.active { background: var(--clay); color: #fff; border-color: var(--clay); }
-
-/* 标记卡片 */
 .marker-card {
   background: var(--cream); border: 2px solid var(--wheat); border-radius: var(--radius);
   padding: 14px 16px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease;
   display: flex; align-items: center; gap: 12px; position: relative;
-  overflow: hidden; /* 为滑动删除提供裁剪 */
 }
 .marker-card:hover { border-color: var(--clay); box-shadow: 0 4px 16px var(--shadow-warm); transform: translateX(4px); }
 .marker-card.highlight { border-color: var(--ember); background: var(--blush); }
@@ -310,33 +245,9 @@ body {
 }
 .marker-act-btn:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); }
 .marker-act-btn.danger:hover { background: var(--ember); border-color: var(--ember); color: #fff; }
-
-/* 滑动删除 */
-.swipe-delete {
-  position: absolute; right: 0; top: 0; bottom: 0;
-  width: 70px; background: var(--ember); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-family: var(--font-body);
-  border-radius: 0 var(--radius) var(--radius) 0;
-  transform: translateX(100%); transition: transform 0.25s ease;
-  cursor: pointer; z-index: 0;
-}
-.swipe-delete.visible { transform: translateX(0); }
-.marker-card-inner {
-  display: flex; align-items: center; gap: 12px;
-  width: 100%; position: relative; z-index: 1;
-  background: var(--cream); border-radius: var(--radius);
-  transition: transform 0.25s ease;
-}
-.marker-card-inner.swiped { transform: translateX(-70px); }
-
 .empty-state { text-align: center; padding: 30px 20px; color: var(--ink); opacity: 0.4; }
 .empty-state-icon { font-size: 40px; margin-bottom: 8px; }
 .empty-state-text { font-size: 14px; font-style: italic; }
-
-/* ============================================================
-   Modal — 照搬现有
-   ============================================================ */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 2000;
   background: rgba(44,24,16,0.35); backdrop-filter: blur(4px);
@@ -381,10 +292,6 @@ body {
 .modal-btn.secondary:hover { border-color: var(--clay); }
 .modal-btn.danger { background: transparent; color: var(--ember); border: 2px dashed var(--ember); font-size: 14px; }
 .modal-btn.danger:hover { background: var(--ember); color: #fff; border-style: solid; }
-
-/* ============================================================
-   Toast — 照搬现有
-   ============================================================ */
 .toast {
   position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
   z-index: 3000; background: var(--ink); color: var(--cream);
@@ -393,31 +300,6 @@ body {
   animation: floatUp 0.3s ease; transition: opacity 0.3s ease;
 }
 .toast.fade-out { opacity: 0; }
-
-/* ============================================================
-   FAB (移动端浮动按钮)
-   ============================================================ */
-.fab {
-  position: fixed; bottom: 80px; right: 20px;
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--clay); color: #fff; border: none;
-  box-shadow: 0 4px 16px var(--shadow-deep);
-  font-size: 24px; display: flex;
-  align-items: center; justify-content: center;
-  cursor: pointer; z-index: 950;
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-.fab:hover { background: var(--ember); }
-.fab:active { transform: scale(0.9); }
-
-/* 桌面端隐藏 FAB */
-@media (min-width: 769px) {
-  .fab { display: none; }
-}
-
-/* ============================================================
-   路线面板
-   ============================================================ */
 .route-panel {
   position: fixed; top: 90px; right: 16px; z-index: 950;
   background: rgba(250,245,238,0.9); backdrop-filter: blur(12px);
@@ -446,10 +328,6 @@ body {
   box-shadow: 0 4px 16px var(--shadow-warm); display: none; white-space: nowrap;
 }
 .route-info.visible { display: block; animation: floatUp 0.3s ease; }
-
-/* ============================================================
-   数据管理面板
-   ============================================================ */
 .data-panel {
   position: fixed; top: 90px; left: 16px; z-index: 950;
   background: rgba(250,245,238,0.9); backdrop-filter: blur(12px);
@@ -464,10 +342,16 @@ body {
   cursor: pointer; transition: all 0.2s ease; color: var(--ink); text-align: left;
 }
 .data-btn:hover { border-color: var(--clay); background: var(--blush); }
-
-/* ============================================================
-   标记标签（地图上的文字标记） — 照搬现有 .marker-label-wrap
-   ============================================================ */
+.leaflet-control-zoom a {
+  background: var(--cream) !important; color: var(--ink) !important;
+  border: 2px solid var(--wheat) !important; border-radius: 50% !important;
+  width: 36px !important; height: 36px !important; line-height: 34px !important;
+  font-family: var(--font-body) !important; font-size: 18px !important;
+  box-shadow: 0 2px 8px var(--shadow-warm) !important;
+}
+.leaflet-control-zoom a:hover { background: var(--clay) !important; color: #fff !important; border-color: var(--clay) !important; }
+.leaflet-control-attribution { font-size: 9px !important; opacity: 0.4 !important; }
+.custom-marker { background: transparent !important; border: none !important; }
 .marker-label-wrap {
   position: absolute; transform: translate(-50%, -100%);
   display: flex; flex-direction: column; align-items: center;
@@ -487,28 +371,18 @@ body {
   line-height: 1.3; text-align: center;
   max-width: 120px; overflow: hidden; text-overflow: ellipsis;
 }
-
-/* ============================================================
-   滚动条美化
-   ============================================================ */
 .sheet-content::-webkit-scrollbar { width: 4px; }
 .sheet-content::-webkit-scrollbar-track { background: transparent; }
 .sheet-content::-webkit-scrollbar-thumb { background: var(--wheat); border-radius: 10px; }
-
-/* ============================================================
-   高德版权信息淡化
-   ============================================================ */
-.amap-copyright { opacity: 0.4 !important; font-size: 9px !important; }
-
-/* ============================================================
-   移动端适配
-   ============================================================ */
+.search-results::-webkit-scrollbar { width: 4px; }
+.search-results::-webkit-scrollbar-track { background: transparent; }
+.search-results::-webkit-scrollbar-thumb { background: var(--wheat); border-radius: 10px; }
 @media (max-width: 768px) {
   .top-bar { padding: 6px 10px; gap: 6px; top: 8px; }
-  .top-logo { font-size: 16px; }
+  .top-logo { font-size: 18px; }
   .top-logo svg { width: 24px; height: 24px; }
-  .search-input { width: 140px; font-size: 13px; padding: 8px 36px 8px 14px; }
-  .search-input:focus { width: 180px; }
+  .search-input { width: 160px; font-size: 13px; }
+  .search-input:focus { width: 200px; }
   .top-btn { width: 32px; height: 32px; font-size: 14px; }
   .bottom-sheet { max-height: 60vh; }
   .bottom-sheet.collapsed { transform: translateY(calc(100% - 48px)); }
@@ -516,16 +390,11 @@ body {
   .route-panel { max-width: 160px; right: 4px; top: 80px; }
   .data-panel { left: 4px; top: 80px; }
   .marker-label-text { font-size: 11px; max-width: 80px; }
-  .modal-card { width: 90%; max-width: 420px; max-height: 80vh; }
-  .city-switcher { top: 72px; }
 }
 </style>
 </head>
 <body>
 
-<!-- ============================================================
-   Cat SVG 模板 — 品牌 IP，照搬现有
-   ============================================================ -->
 <template id="siameseCatSVG">
   <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <circle cx="50" cy="50" r="48" fill="#FFE0C0"/>
@@ -556,9 +425,6 @@ body {
   </svg>
 </template>
 
-<!-- ============================================================
-   Welcome Screen
-   ============================================================ -->
 <div class="welcome-overlay" id="welcomeScreen">
   <div class="welcome-logo" id="welcomeLogoContainer">
     <span id="welcomeLogoText">秋米小地图</span>
@@ -569,12 +435,7 @@ body {
   <button class="welcome-confirm" id="customCityConfirm">出发</button>
 </div>
 
-<!-- ============================================================
-   App Container
-   ============================================================ -->
 <div class="app-container" id="appContainer">
-
-  <!-- Top Bar（已移除同步按钮 ⟳） -->
   <div class="top-bar" id="topBar">
     <span class="top-logo" id="topLogo" title="返回城市选择">
       <span id="topLogoText">秋米小地图</span>
@@ -582,18 +443,19 @@ body {
     <div class="search-wrapper" id="searchWrapper">
       <input class="search-input" id="searchInput" placeholder="搜地点…" autocomplete="off">
       <span class="search-icon">🔍</span>
+      <span class="search-source-tag" id="searchSourceTag"></span>
+      <div class="search-results" id="searchResults"></div>
     </div>
     <div class="top-actions">
       <button class="top-btn" id="btnAdd" title="添加标记">✦<span class="tooltip-text">手动标记</span></button>
       <button class="top-btn" id="btnData" title="数据管理">⬡<span class="tooltip-text">数据管理</span></button>
       <button class="top-btn" id="btnRouteToggle" title="路线模式">⌒<span class="tooltip-text">规划路线</span></button>
+      <button class="top-btn" id="btnSync" title="多设备同步">⟳<span class="tooltip-text">多设备同步</span></button>
     </div>
   </div>
 
-  <!-- City Switcher -->
   <div class="city-switcher" id="citySwitcher"></div>
 
-  <!-- Route Panel -->
   <div class="route-panel" id="routePanel">
     <div class="route-panel-title">🗺️ 路线规划</div>
     <div class="route-panel-list" id="routeList">
@@ -603,26 +465,21 @@ body {
     <button class="route-panel-btn clear" id="btnClearRoute">清空路线</button>
   </div>
 
-  <!-- Route Info Bar -->
   <div class="route-info" id="routeInfo"></div>
 
-  <!-- Data Panel -->
   <div class="data-panel" id="dataPanel">
     <button class="data-btn" id="btnExport">📤 导出数据文件</button>
     <button class="data-btn" id="btnImport">📥 导入数据文件</button>
+    <button class="data-btn" id="btnSyncLoad" style="color:var(--sky)">📂 从同步文件加载</button>
+    <button class="data-btn" id="btnSyncSave" style="color:var(--sage)">💾 保存到同步文件</button>
     <button class="data-btn" id="btnSyncCode" style="color:var(--clay)">🔗 生成分享码</button>
-    <button class="data-btn" id="btnImportCode" style="color:var(--sky)">🔗 导入分享码</button>
     <button class="data-btn" id="btnClearAll" style="color:var(--ember)">🗑️ 清空当前城市</button>
     <input type="file" id="importFileInput" accept=".json" style="display:none">
+    <input type="file" id="syncFileLoadInput" accept=".json" style="display:none">
   </div>
 
-  <!-- Map -->
   <div id="map"></div>
 
-  <!-- FAB（移动端浮动操作按钮） -->
-  <button class="fab" id="fabAdd" title="快速添加">📍</button>
-
-  <!-- Bottom Sheet -->
   <div class="bottom-sheet collapsed" id="bottomSheet">
     <div class="sheet-handle" id="sheetHandle">
       <div class="sheet-handle-line"></div>
@@ -640,38 +497,35 @@ body {
     </div>
   </div>
 
-  <!-- Modal Container -->
   <div id="modalContainer"></div>
-
-  <!-- Toast Container -->
   <div id="toastContainer"></div>
 </div>
 
-<!-- ============================================================
-   高德 JS API 2.0 CDN（同步加载）
-   ============================================================ -->
-<script src="https://webapi.amap.com/maps?v=2.0&key=YOUR_KEY&plugin=AMap.AutoComplete,AMap.PlaceSearch,AMap.Geocoder,AMap.DrivingRoute,AMap.WalkingRoute,AMap.DistrictSearch,AMap.Geolocation,AMap.MarkerClusterer"></script>
-
-<!-- ============================================================
-   应用 JavaScript
-   ============================================================ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function(){
 'use strict';
 
-// ==================== 检查高德 API 是否加载 ====================
-if (typeof AMap === 'undefined') {
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;font-size:18px;color:#D4644A;text-align:center;padding:20px;">⚠️ 地图服务加载失败<br><small style="font-size:14px;opacity:0.6;">请检查网络连接后刷新页面</small></div>';
-  throw new Error('AMap not loaded');
-}
-
-// ==================== 常量 ====================
 const STORAGE_KEY = 'qiumi_map_data_v3';
 
 const MARKER_COLORS = [
   '#2C1810', '#CC7540', '#D4644A', '#7C9A6B', '#4A7C96', '#8E6B5A',
   '#E06070', '#5080C0', '#C09040', '#5C8C6C', '#9070B0', '#3C3C3C'
 ];
+
+function injectCatSVGs() {
+  const tmpl = document.getElementById('siameseCatSVG');
+  if (!tmpl) return;
+  function insertCat(el, size) {
+    if (!el) return;
+    const clone = tmpl.content.cloneNode(true);
+    const svg = clone.querySelector('svg');
+    if (size) { svg.style.width = size + 'px'; svg.style.height = size + 'px'; }
+    el.insertBefore(clone.firstElementChild, el.firstChild);
+  }
+  insertCat(document.getElementById('welcomeLogoContainer'), 56);
+  insertCat(document.getElementById('topLogo'), 30);
+}
 
 const CATEGORIES = [
   { id: 'restaurant', name: '🍜 餐厅', emoji: '🍜' },
@@ -694,56 +548,21 @@ const DEFAULT_CITIES = [
   { name: '深圳', lat: 22.5431, lng: 114.0579, zoom: 12 },
 ];
 
-// ==================== 状态 ====================
 let map = null;
 let currentCity = null;
 let markersData = [];
-let mapMarkers = {};       // id → AMap.Marker
-let cluster = null;        // AMap.MarkerClusterer 实例
+let mapMarkers = {};
+let routePolyline = null;
+let routeLineMarkers = [];
 let activeFilter = 'all';
+let searchTimeout = null;
 let isSheetExpanded = false;
 let routeStops = [];
 let isRouteMode = false;
 let userCities = [];
-let cityBoundaryPolygon = null;
-let routeDriving = null;   // DrivingRoute 实例
-let autoComplete = null;   // 搜索自动补全实例
-let mapClickAddFlag = false; // 防止移动端 click 和 hold 同时触发
-let isMobile = false;
+let cityBoundaryLayer = null;
+let syncFileHandle = null;
 
-// ==================== 工具函数 ====================
-function showToast(msg) {
-  const container = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = 'toast'; toast.textContent = msg;
-  container.appendChild(toast);
-  setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 2200);
-}
-
-function genId() { return 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
-function getCatEmoji(id) { const c = CATEGORIES.find(x => x.id === id); return c ? c.emoji : '📍'; }
-function getCatName(id) { const c = CATEGORIES.find(x => x.id === id); return c ? c.name : '其他'; }
-function escHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-
-// 高德坐标转换：[lat, lng] → [lng, lat]
-function toAmap(lat, lng) { return [lng, lat]; }
-
-// ==================== 猫咪 SVG ====================
-function injectCatSVGs() {
-  const tmpl = document.getElementById('siameseCatSVG');
-  if (!tmpl) return;
-  function insertCat(el, size) {
-    if (!el) return;
-    const clone = tmpl.content.cloneNode(true);
-    const svg = clone.querySelector('svg');
-    if (size) { svg.style.width = size + 'px'; svg.style.height = size + 'px'; }
-    el.insertBefore(clone.firstElementChild, el.firstChild);
-  }
-  insertCat(document.getElementById('welcomeLogoContainer'), 56);
-  insertCat(document.getElementById('topLogo'), 30);
-}
-
-// ==================== 数据持久化 ====================
 function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -777,7 +596,20 @@ function getCityMarkers() {
   return markersData.filter(m => m.city === currentCity.name);
 }
 
-// ==================== 城市管理 ====================
+function showToast(msg) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast'; toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 2200);
+}
+
+function genId() { return 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
+function getCatEmoji(id) { const c = CATEGORIES.find(x => x.id === id); return c ? c.emoji : '📍'; }
+function getCatName(id) { const c = CATEGORIES.find(x => x.id === id); return c ? c.name : '其他'; }
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+// ── City Management ──
 function getAllCities() {
   const seen = new Set();
   const cities = [];
@@ -826,148 +658,65 @@ function deleteUserCity(cityName) {
   userCities = userCities.filter(c => c.name !== cityName);
   if (currentCity && currentCity.name === cityName) {
     currentCity = null;
-    if (map) { map.destroy(); map = null; }
-    clearCityBoundary();
+    if (map) { map.remove(); map = null; }
   }
   saveData(); renderWelcomeCities(); updateCitySwitcher();
+  tryWriteSyncFile();
   showToast('已移除城市：' + cityName);
 }
 
-// ==================== 高德地图初始化 ====================
+// ── Map ──
 function initMap(lat, lng, zoom) {
-  if (map) { map.destroy(); map = null; mapMarkers = {}; cluster = null; }
-  map = new AMap.Map('map', {
-    center: toAmap(lat, lng),
-    zoom: zoom,
-    resizeEnable: true,
-    touchZoom: true,
-    dragEnable: true,
-    zoomEnable: true,
-    mapStyle: 'amap://styles/whitesmoke',
-    viewMode: '2D',
-  });
-  // 绑定点击和长按事件
-  bindMapClickEvents();
+  if (map) { map.remove(); map = null; mapMarkers = {}; }
+  map = L.map('map', { center: [lat, lng], zoom: zoom, zoomControl: true, attributionControl: true, minZoom: 3, maxZoom: 19 });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>', maxZoom: 19
+  }).addTo(map);
+  setTimeout(() => map.invalidateSize(), 100);
 }
 
-function bindMapClickEvents() {
-  if (!map) return;
-
-  // 桌面端点击添加标记
-  map.on('click', function(e) {
-    if (isMobile && mapClickAddFlag) { mapClickAddFlag = false; return; }
-    handleMapAddMarker(e.lnglat);
-  });
-
-  // 移动端长按添加标记（高德原生支持）
-  map.on('hold', function(e) {
-    if (!isMobile) return;
-    mapClickAddFlag = true;
-    handleMapAddMarker(e.lnglat);
+function createMarkerIcon(marker) {
+  const textColor = marker.textColor || MARKER_COLORS[0];
+  const catEmoji = getCatEmoji(marker.category);
+  const displayName = marker.name.length > 8 ? marker.name.slice(0, 8) + '…' : marker.name;
+  return L.divIcon({
+    html: '<div class="marker-label-wrap" data-marker-id="' + marker.id + '">' +
+      '<div class="marker-label-dot" style="background:' + textColor + '"></div>' +
+      '<div class="marker-label-text" style="color:' + textColor + '">' + catEmoji + ' ' + escHtml(displayName) + '</div></div>',
+    className: 'custom-marker', iconSize: [0, 0], iconAnchor: [0, 0], popupAnchor: [0, -30],
   });
 }
 
-function handleMapAddMarker(lnglat) {
-  // 逆地理编码获取地址
-  const geocoder = new AMap.Geocoder();
-  geocoder.getAddress([lnglat.lng, lnglat.lat], function(status, result) {
-    if (status === 'complete' && result.regeocode) {
-      const addr = result.regeocode.formattedAddress;
-      showAddModal(lnglat.lng, lnglat.lat, '', addr);
-    } else {
-      showAddModal(lnglat.lng, lnglat.lat, '', '');
-    }
-  });
-}
-
-// ==================== 标记渲染 ====================
 function renderMapMarkers() {
-  // 清除旧标记
-  Object.values(mapMarkers).forEach(m => m.setMap(null));
+  Object.values(mapMarkers).forEach(m => map.removeLayer(m));
   mapMarkers = {};
-  if (cluster) { cluster.setMap(null); cluster = null; }
-
-  clearRouteDriving();
-
   let cityMarkers = getCityMarkers();
   if (activeFilter !== 'all') cityMarkers = cityMarkers.filter(m => m.category === activeFilter);
-
-  if (cityMarkers.length === 0) { updateSheetContent(); return; }
-
-  const markersArray = [];
-
   cityMarkers.forEach(m => {
-    const textColor = m.textColor || MARKER_COLORS[0];
-    const catEmoji = getCatEmoji(m.category);
-    const displayName = m.name.length > 8 ? m.name.slice(0, 8) + '…' : m.name;
-    const content = '<div class="marker-label-wrap" data-marker-id="' + m.id + '">' +
-      '<div class="marker-label-dot" style="background:' + textColor + '"></div>' +
-      '<div class="marker-label-text" style="color:' + textColor + '">' + catEmoji + ' ' + escHtml(displayName) + '</div></div>';
-
-    const marker = new AMap.Marker({
-      position: toAmap(m.lat, m.lng),
-      content: content,
-      offset: new AMap.Pixel(-10, -35),
-      zIndex: 100,
-      topWhenClick: true,
-    });
-
-    // 点击标记：弹出信息窗
-    marker.on('click', function() {
-      highlightCard(m.id);
-      showMarkerInfoWindow(m);
-    });
-
-    marker._markerData = m;
-    markersArray.push(marker);
-    mapMarkers[m.id] = marker;
+    const icon = createMarkerIcon(m);
+    const leafMarker = L.marker([m.lat, m.lng], { icon: icon }).addTo(map);
+    const routeBtn = isRouteMode
+      ? '<button onclick="window._addToRoute(\'' + m.id + '\')" style="padding:4px 12px;border-radius:12px;border:1.5px solid var(--sage);background:var(--cream);color:var(--sage);cursor:pointer;font-size:11px;font-family:var(--font-body);">⟐ 加入路线</button>' : '';
+    const popupHtml = '<div style="min-width:180px;font-family:var(--font-body);">' +
+      '<div style="font-weight:700;font-size:15px;margin-bottom:4px;">' + getCatEmoji(m.category) + ' ' + escHtml(m.name) + '</div>' +
+      (m.address ? '<div style="font-size:12px;opacity:0.5;margin-bottom:4px;">' + escHtml(m.address) + '</div>' : '') +
+      (m.notes ? '<div style="font-size:12px;margin-bottom:8px;font-style:italic;">' + escHtml(m.notes) + '</div>' : '') +
+      '<div style="display:flex;gap:6px;">' +
+      '<button onclick="window._editMarker(\'' + m.id + '\')" style="padding:4px 12px;border-radius:12px;border:1.5px solid var(--wheat);background:var(--cream);cursor:pointer;font-size:11px;font-family:var(--font-body);">编辑</button>' +
+      '<button onclick="window._deleteMarker(\'' + m.id + '\')" style="padding:4px 12px;border-radius:12px;border:1.5px solid var(--ember);background:var(--cream);color:var(--ember);cursor:pointer;font-size:11px;font-family:var(--font-body);">删除</button>' +
+      routeBtn + '</div></div>';
+    leafMarker.bindPopup(popupHtml, { maxWidth: 280, className: 'qiumi-popup' });
+    leafMarker.on('click', function() { highlightCard(m.id); });
+    mapMarkers[m.id] = leafMarker;
   });
-
-  // 判断是否启用聚合（>15 个标记）
-  if (markersArray.length > 15 && window.AMap.MarkerClusterer) {
-    cluster = new AMap.MarkerClusterer(map, markersArray, {
-      gridSize: 60,
-      maxZoom: 14,
-      styles: [{
-        url: '',
-        size: new AMap.Size(36, 36),
-        textSize: 14,
-        textColor: '#fff',
-        backgroundColor: 'var(--clay)',
-      }],
-    });
-  } else {
-    markersArray.forEach(m => m.setMap(map));
-  }
-
   updateSheetContent();
-}
-
-function showMarkerInfoWindow(m) {
-  if (!map) return;
-  const routeBtn = isRouteMode
-    ? '<button onclick="window._addToRoute(\'' + m.id + '\')" style="padding:4px 12px;border-radius:12px;border:1.5px solid #7C9A6B;background:var(--cream);color:#7C9A6B;cursor:pointer;font-size:11px;font-family:var(--font-body);">⟐ 加入路线</button>' : '';
-
-  const content = '<div style="min-width:180px;font-family:var(--font-body);">' +
-    '<div style="font-weight:700;font-size:15px;margin-bottom:4px;">' + getCatEmoji(m.category) + ' ' + escHtml(m.name) + '</div>' +
-    (m.address ? '<div style="font-size:12px;opacity:0.5;margin-bottom:4px;">' + escHtml(m.address) + '</div>' : '') +
-    (m.notes ? '<div style="font-size:12px;margin-bottom:8px;font-style:italic;">' + escHtml(m.notes) + '</div>' : '') +
-    '<div style="display:flex;gap:6px;">' +
-    '<button onclick="window._editMarker(\'' + m.id + '\')" style="padding:4px 12px;border-radius:12px;border:1.5px solid var(--wheat);background:var(--cream);cursor:pointer;font-size:11px;font-family:var(--font-body);">编辑</button>' +
-    '<button onclick="window._deleteMarker(\'' + m.id + '\')" style="padding:4px 12px;border-radius:12px;border:1.5px solid #D4644A;background:var(--cream);color:#D4644A;cursor:pointer;font-size:11px;font-family:var(--font-body);">删除</button>' +
-    routeBtn + '</div></div>';
-
-  const infoWindow = new AMap.InfoWindow({
-    content: content,
-    offset: new AMap.Pixel(0, -40),
-  });
-  infoWindow.open(map, toAmap(m.lat, m.lng));
 }
 
 function flyToMarker(id) {
   const m = markersData.find(x => x.id === id);
   if (!m || !map) return;
-  map.setZoomAndCenter(16, toAmap(m.lat, m.lng));
+  map.flyTo([m.lat, m.lng], 16, { duration: 1.5 });
+  setTimeout(() => { if (mapMarkers[id]) mapMarkers[id].openPopup(); }, 800);
 }
 
 function highlightCard(id) {
@@ -976,7 +725,6 @@ function highlightCard(id) {
   if (card) { card.classList.add('highlight'); card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 }
 
-// ==================== 底部抽屉 ====================
 function updateSheetContent() {
   const container = document.getElementById('sheetContent');
   const countEl = document.getElementById('sheetCount');
@@ -984,7 +732,6 @@ function updateSheetContent() {
   let cityMarkers = getCityMarkers();
   if (activeFilter !== 'all') cityMarkers = cityMarkers.filter(m => m.category === activeFilter);
   countEl.textContent = cityMarkers.length + ' 个地点';
-
   let filterHtml = '<button class="cat-pill ' + (activeFilter === 'all' ? 'active' : '') + '" data-filter="all">全部</button>';
   CATEGORIES.forEach(c => {
     filterHtml += '<button class="cat-pill ' + (activeFilter === c.id ? 'active' : '') + '" data-filter="' + c.id + '">' + c.name + '</button>';
@@ -993,75 +740,27 @@ function updateSheetContent() {
   filtersContainer.querySelectorAll('.cat-pill').forEach(pill => {
     pill.addEventListener('click', () => { activeFilter = pill.dataset.filter; renderMapMarkers(); });
   });
-
   if (cityMarkers.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">' +
       (activeFilter === 'all' ? '还没标记过任何地点呢<br>搜索一个地方，然后添加到标记吧' : '这个分类下还没有标记') + '</div></div>';
     return;
   }
-
   let cardsHtml = '';
   cityMarkers.forEach(m => {
     const routeAdd = isRouteMode ? '<button class="marker-act-btn" onclick="event.stopPropagation();addToRoute(\'' + m.id + '\')" title="加入路线" style="color:var(--sage)">+</button>' : '';
-    cardsHtml +=
-      '<div class="marker-card" data-id="' + m.id + '">' +
-        '<div class="swipe-delete" onclick="event.stopPropagation();deleteMarker(\'' + m.id + '\')">🗑️ 删除</div>' +
-        '<div class="marker-card-inner">' +
-          '<div class="marker-cat-icon">' + getCatEmoji(m.category) + '</div>' +
-          '<div class="marker-info" onclick="flyToMarker(\'' + m.id + '\')">' +
-            '<div class="marker-name">' + escHtml(m.name) + '</div>' +
-            (m.address ? '<div class="marker-detail">' + escHtml(m.address) + '</div>' : '') +
-            '<div class="marker-date">' + (m.date ? m.date.slice(0, 10) : '') + '</div>' +
-          '</div>' +
-          '<div class="marker-actions">' + routeAdd +
-            '<button class="marker-act-btn" onclick="event.stopPropagation();editMarker(\'' + m.id + '\')" title="编辑">✏️</button>' +
-            '<button class="marker-act-btn danger" onclick="event.stopPropagation();deleteMarker(\'' + m.id + '\')" title="删除">×</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
+    cardsHtml += '<div class="marker-card" data-id="' + m.id + '">' +
+      '<div class="marker-cat-icon">' + getCatEmoji(m.category) + '</div>' +
+      '<div class="marker-info" onclick="flyToMarker(\'' + m.id + '\')">' +
+      '<div class="marker-name">' + escHtml(m.name) + '</div>' +
+      (m.address ? '<div class="marker-detail">' + escHtml(m.address) + '</div>' : '') +
+      '<div class="marker-date">' + (m.date ? m.date.slice(0, 10) : '') + '</div>' +
+      '</div>' +
+      '<div class="marker-actions">' + routeAdd +
+      '<button class="marker-act-btn" onclick="event.stopPropagation();editMarker(\'' + m.id + '\')" title="编辑">✏️</button>' +
+      '<button class="marker-act-btn danger" onclick="event.stopPropagation();deleteMarker(\'' + m.id + '\')" title="删除">×</button>' +
+      '</div></div>';
   });
   container.innerHTML = cardsHtml;
-
-  // 绑定滑动删除
-  bindSwipeDelete(container);
-}
-
-function bindSwipeDelete(container) {
-  container.querySelectorAll('.marker-card').forEach(card => {
-    const inner = card.querySelector('.marker-card-inner');
-    const swipeDel = card.querySelector('.swipe-delete');
-    if (!inner || !swipeDel) return;
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    card.addEventListener('touchstart', function(e) {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-
-    card.addEventListener('touchend', function(e) {
-      const diffX = e.changedTouches[0].clientX - touchStartX;
-      const diffY = e.changedTouches[0].clientY - touchStartY;
-      // 仅当水平滑动大于垂直滑动时才触发
-      if (Math.abs(diffX) > Math.abs(diffY)) {
-        if (diffX < -60) {
-          inner.classList.add('swiped');
-          swipeDel.classList.add('visible');
-        } else if (diffX > 30) {
-          inner.classList.remove('swiped');
-          swipeDel.classList.remove('visible');
-        }
-      }
-    });
-
-    // 点击卡片非删除区域时恢复
-    inner.addEventListener('click', function() {
-      if (swipeDel.classList.contains('visible')) {
-        inner.classList.remove('swiped');
-        swipeDel.classList.remove('visible');
-      }
-    });
-  });
 }
 
 function setupSheet() {
@@ -1079,37 +778,95 @@ function setupSheet() {
   });
 }
 
-// ==================== 搜索（高德 AutoComplete） ====================
-function initAutoComplete() {
-  if (autoComplete) return;
-  if (!currentCity) return;
+// ── Search ──
+async function searchNominatim(query, cityName) {
+  const q = cityName ? query + ', ' + cityName : query;
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q) + '&limit=10&addressdetails=1&accept-language=zh&namedetails=1&extratags=1';
+  const resp = await fetch(url, { headers: { 'User-Agent': 'QiumiMap/2.0' } });
+  if (!resp.ok) throw new Error('Nominatim error');
+  const data = await resp.json();
+  return data.map(item => ({
+    name: item.namedetails?.name || item.name || item.display_name.split(',')[0],
+    display_name: item.display_name, lat: parseFloat(item.lat), lng: parseFloat(item.lon),
+    type: item.type || '', category: item.category || '', importance: item.importance || 0, source: 'Nominatim'
+  }));
+}
 
-  autoComplete = new AMap.AutoComplete({
-    city: currentCity.name,
-    citylimit: true,
-    input: 'searchInput',
-  });
-
-  autoComplete.on('select', function(e) {
-    const poi = e.poi;
-    if (!poi || !poi.location) return;
-    // 飞行到 POI 位置
-    map.setZoomAndCenter(16, [poi.location.lng, poi.location.lat]);
-    // 清空输入框
-    document.getElementById('searchInput').value = '';
-    // 弹出添加标记 modal
-    showAddModal(poi.location.lng, poi.location.lat, poi.name || '', poi.address || '');
+async function searchPhoton(query, cityName) {
+  const q = cityName ? query + ' ' + cityName : query;
+  const url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=10&lang=zh&osm_tag=!highway&osm_tag=!place:country';
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('Photon error');
+  const data = await resp.json();
+  return (data.features || []).map(f => {
+    const props = f.properties || {};
+    const coords = f.geometry?.coordinates || [0, 0];
+    return {
+      name: props.name || props.street || props.city || '未知',
+      display_name: [props.name, props.street, props.district, props.city, props.country].filter(Boolean).join(', '),
+      lat: coords[1], lng: coords[0], type: props.osm_key || props.type || '',
+      category: props.osm_value || '', importance: props.importance || 0.3, source: 'Photon'
+    };
   });
 }
 
-function destroyAutoComplete() {
-  if (autoComplete) {
-    // 高德 AutoComplete 没有标准的 destroy 方法，置空引用即可
-    autoComplete = null;
+async function searchPlaces(query) {
+  if (!query || query.length < 1) {
+    document.getElementById('searchResults').classList.remove('active');
+    return;
+  }
+  const resultsEl = document.getElementById('searchResults');
+  const sourceTag = document.getElementById('searchSourceTag');
+  resultsEl.innerHTML = '<div class="search-result-item" style="text-align:center;opacity:0.5;">搜索中…</div>';
+  resultsEl.classList.add('active');
+  sourceTag.classList.remove('visible');
+  const cityName = currentCity ? currentCity.name : null;
+  try {
+    let results = [], usedSource = '';
+    try { results = await searchPhoton(query, cityName); usedSource = 'Photon'; }
+    catch (e1) {
+      try { results = await searchNominatim(query, cityName); usedSource = 'Nominatim'; }
+      catch (e2) { throw new Error('All search sources failed'); }
+    }
+    if (results.length === 0 && usedSource === 'Photon') {
+      try { results = await searchNominatim(query, cityName); usedSource = 'Nominatim'; } catch (e) {}
+    }
+    sourceTag.textContent = usedSource;
+    sourceTag.classList.add('visible');
+    setTimeout(() => sourceTag.classList.remove('visible'), 3000);
+    if (results.length === 0) {
+      resultsEl.innerHTML = '<div class="search-result-item" style="text-align:center;opacity:0.5;">没有找到结果，换个关键词试试？</div>';
+      return;
+    }
+    const deduped = [];
+    results.forEach(r => {
+      if (!deduped.some(d => Math.abs(d.lat - r.lat) < 0.0005 && Math.abs(d.lng - r.lng) < 0.0005)) deduped.push(r);
+    });
+    deduped.sort((a, b) => b.importance - a.importance);
+    let html = '';
+    deduped.forEach((item, i) => {
+      const typeLabel = item.type || item.category || '';
+      html += '<div class="search-result-item" data-index="' + i + '" data-lat="' + item.lat + '" data-lng="' + item.lng + '" data-name="' + escHtml(item.name) + '" data-addr="' + escHtml(item.display_name) + '">' +
+        '<div class="result-name">📍 ' + escHtml(item.name) + (typeLabel ? ' <span class="result-type">' + escHtml(typeLabel) + '</span>' : '') + '</div>' +
+        '<div class="result-addr">' + escHtml(item.display_name) + '</div></div>';
+    });
+    resultsEl.innerHTML = html;
+    resultsEl.querySelectorAll('.search-result-item[data-index]').forEach(item => {
+      item.addEventListener('click', function() {
+        const lat = parseFloat(this.dataset.lat), lng = parseFloat(this.dataset.lng);
+        map.flyTo([lat, lng], 16, { duration: 1.5 });
+        resultsEl.classList.remove('active');
+        document.getElementById('searchInput').value = '';
+        showAddModal(lat, lng, this.dataset.name, this.dataset.addr);
+      });
+    });
+  } catch (e) {
+    console.error('Search error:', e);
+    resultsEl.innerHTML = '<div class="search-result-item" style="text-align:center;opacity:0.5;">搜索出错了，请稍后重试</div>';
   }
 }
 
-// ==================== Modal ====================
+// ── Modals ──
 function showModal(title, content) {
   const container = document.getElementById('modalContainer');
   container.innerHTML = '<div class="modal-overlay" id="modalOverlay"><div class="modal-card"><div class="modal-title">' + title + '</div>' + content + '</div></div>';
@@ -1159,7 +916,7 @@ function showAddModal(lat, lng, name, addr) {
       textColor: selectedColor ? selectedColor.dataset.color : MARKER_COLORS[0],
       lat: lat, lng: lng, date: new Date().toISOString(),
     });
-    saveData(); closeModal(); renderMapMarkers();
+    saveData(); closeModal(); renderMapMarkers(); tryWriteSyncFile();
     showToast('标记已添加 ✦');
     if (!isSheetExpanded) { isSheetExpanded = true; document.getElementById('bottomSheet').classList.remove('collapsed'); }
   });
@@ -1188,7 +945,7 @@ function editMarker(id) {
     const selectedColor = document.querySelector('#colorPickerContainer .color-dot.selected');
     m.textColor = selectedColor ? selectedColor.dataset.color : MARKER_COLORS[0];
     if (!m.name) { showToast('名称不能为空'); return; }
-    saveData(); closeModal(); renderMapMarkers();
+    saveData(); closeModal(); renderMapMarkers(); tryWriteSyncFile();
     showToast('标记已更新 ✦');
   });
 }
@@ -1205,48 +962,64 @@ function deleteMarker(id) {
   document.getElementById('btnConfirmDelete').addEventListener('click', function() {
     markersData = markersData.filter(x => x.id !== id);
     routeStops = routeStops.filter(s => s !== id);
-    saveData(); closeModal(); renderMapMarkers(); updateRoutePanel();
+    saveData(); closeModal(); renderMapMarkers(); updateRoutePanel(); tryWriteSyncFile();
     showToast('标记已删除');
   });
 }
 
-// ==================== 城市边界（高德 DistrictSearch） ====================
-function fetchCityBoundary(cityName) {
-  clearCityBoundary();
+// ── City Boundary ──
+async function fetchCityBoundary(cityName) {
+  if (cityBoundaryLayer) { map.removeLayer(cityBoundaryLayer); cityBoundaryLayer = null; }
   if (!map) return;
-
-  const district = new AMap.DistrictSearch({
-    subdistrict: 0,
-    extensions: 'all',
-    level: 'city'
-  });
-
-  district.search(cityName, function(status, result) {
-    if (status === 'complete' && result.districtList && result.districtList.length > 0) {
-      const boundaries = result.districtList[0].boundaries;
-      if (boundaries && boundaries.length > 0) {
-        const polygon = new AMap.Polygon({
-          path: boundaries,
-          strokeColor: '#3388FF',
-          strokeWeight: 3,
-          strokeStyle: 'dashed',
-          fillColor: '#3388FF',
-          fillOpacity: 0.08,
-          strokeDasharray: [10, 8],
-        });
-        polygon.setMap(map);
-        cityBoundaryPolygon = polygon;
-        map.setFitView([polygon]);
+  try {
+    const nomUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(cityName + ', China') + '&limit=1&addressdetails=1&accept-language=zh&extratags=1&polygon_geojson=1';
+    const nomResp = await fetch(nomUrl, { headers: { 'User-Agent': 'QiumiMap/2.0' } });
+    if (!nomResp.ok) return;
+    const nomData = await nomResp.json();
+    if (nomData.length === 0) return;
+    const item = nomData[0];
+    function draw(latlngs) {
+      cityBoundaryLayer = L.polygon(latlngs, {
+        weight: 3, dashArray: '10, 8', color: '#3388FF',
+        fillColor: '#3388FF', fillOpacity: 0.08, interactive: false,
+      }).addTo(map);
+      if (cityBoundaryLayer) map.fitBounds(cityBoundaryLayer.getBounds(), { padding: [30, 30], maxZoom: 11 });
+    }
+    if (item.geojson && item.geojson.type === 'Polygon' && item.geojson.coordinates[0].length >= 4) {
+      draw(item.geojson.coordinates[0].map(c => [c[1], c[0]]));
+      return;
+    }
+    if (item.geojson && item.geojson.type === 'MultiPolygon') {
+      const allLatlngs = item.geojson.coordinates.map(polygon => polygon[0].map(c => [c[1], c[0]]));
+      if (allLatlngs.length > 0 && allLatlngs[0].length >= 4) { draw(allLatlngs.flat()); return; }
+    }
+    const osmId = item.osm_id, osmType = item.osm_type;
+    if (osmId && (osmType === 'relation' || osmType === 'way')) {
+      const ql = osmType === 'relation' ? '[out:json][timeout:25];relation(' + osmId + ');out geom;' : '[out:json][timeout:25];way(' + osmId + ');out geom;';
+      const overpassUrl = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(ql);
+      const overpassResp = await fetch(overpassUrl);
+      if (overpassResp.ok) {
+        const overpassData = await overpassResp.json();
+        if (overpassData.elements && overpassData.elements.length > 0) {
+          const el = overpassData.elements[0];
+          if (el.geometry && el.geometry.length >= 4) { draw(el.geometry.map(p => [p.lat, p.lng])); return; }
+        }
       }
     }
-  });
+    if (item.boundingbox && item.boundingbox.length === 4) {
+      const [south, north, west, east] = item.boundingbox.map(parseFloat);
+      if (![south, north, west, east].some(isNaN)) {
+        draw([[south, west], [south, east], [north, east], [north, west]]);
+      }
+    }
+  } catch (e) { console.warn('Boundary fetch failed:', e.message); }
 }
 
 function clearCityBoundary() {
-  if (cityBoundaryPolygon) { cityBoundaryPolygon.setMap(null); cityBoundaryPolygon = null; }
+  if (cityBoundaryLayer) { map.removeLayer(cityBoundaryLayer); cityBoundaryLayer = null; }
 }
 
-// ==================== 路线规划（高德 DrivingRoute） ====================
+// ── Route ──
 function addToRoute(id) {
   if (routeStops.indexOf(id) >= 0) { routeStops = routeStops.filter(s => s !== id); showToast('已从路线移除'); }
   else { routeStops.push(id); showToast('已加入路线'); }
@@ -1259,7 +1032,7 @@ function updateRoutePanel() {
   if (routeStops.length === 0) {
     if (!isRouteMode) panel.classList.remove('visible');
     listEl.innerHTML = '<div style="font-size:11px;opacity:0.4;">点击标记卡片上的 + 号添加到路线</div>';
-    clearRouteDriving(); return;
+    clearRouteLine(); return;
   }
   panel.classList.add('visible');
   let html = '';
@@ -1270,65 +1043,53 @@ function updateRoutePanel() {
   listEl.innerHTML = html;
 }
 
-function clearRouteDriving() {
-  if (routeDriving) { routeDriving.clear(); routeDriving = null; }
-  document.getElementById('routeInfo').classList.remove('visible');
-}
-
-function planRoute() {
+async function planRoute() {
   if (routeStops.length < 2) { showToast('至少需要2个地点才能规划路线'); return; }
   const coords = routeStops.map(id => markersData.find(mk => mk.id === id)).filter(Boolean);
   if (coords.length < 2) { showToast('有效地点不足'); return; }
-
-  clearRouteDriving();
-
-  const waypoints = [];
-  const origin = new AMap.LngLat(coords[0].lng, coords[0].lat);
-  const destination = new AMap.LngLat(coords[coords.length - 1].lng, coords[coords.length - 1].lat);
-
-  for (let i = 1; i < coords.length - 1; i++) {
-    waypoints.push(new AMap.LngLat(coords[i].lng, coords[i].lat));
-  }
-
-  routeDriving = new AMap.DrivingRoute({
-    map: map,
-    policy: AMap.DrivingPolicy.LEAST_TIME,
-  });
-
-  routeDriving.search(origin, destination, { waypoints: waypoints }, function(status, result) {
-    if (status === 'complete' && result.routes && result.routes.length > 0) {
-      const route = result.routes[0];
-      const dist = (route.distance / 1000).toFixed(1);
-      const dur = Math.round(route.time / 60);
-      document.getElementById('routeInfo').textContent = '🚗 ' + dist + ' 公里 · ⏱ ' + dur + ' 分钟';
-      document.getElementById('routeInfo').classList.add('visible');
-      showToast('路线规划完成：' + dist + 'km，约' + dur + '分钟');
-    } else {
-      showToast('路线计算失败，试试调整地点顺序');
-    }
-  });
+  const coordStr = coords.map(c => c.lng + ',' + c.lat).join(';');
+  showToast('计算路线中…');
+  try {
+    const resp = await fetch('https://router.project-osrm.org/route/v1/driving/' + coordStr + '?overview=full&geometries=geojson&steps=true&alternatives=false');
+    const data = await resp.json();
+    if (data.code !== 'Ok') { showToast('路线计算失败，试试调整地点顺序'); return; }
+    const route = data.routes[0];
+    const dist = (route.distance / 1000).toFixed(1);
+    const dur = Math.round(route.duration / 60);
+    clearRouteLine();
+    routePolyline = L.geoJSON(route.geometry, {
+      style: { color: '#7C9A6B', weight: 4, opacity: 0.7, dashArray: '8, 8', lineCap: 'round', lineJoin: 'round' }
+    }).addTo(map);
+    coords.forEach((c, i) => {
+      const icon = L.divIcon({
+        html: '<div style="background:var(--sage);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">' + (i + 1) + '</div>',
+        className: '', iconSize: [24, 24], iconAnchor: [12, 12],
+      });
+      const wm = L.marker([c.lat, c.lng], { icon: icon }).addTo(map);
+      wm.bindPopup('<b>' + (i + 1) + '.</b> ' + escHtml(c.name));
+      routeLineMarkers.push(wm);
+    });
+    map.fitBounds(L.latLngBounds(coords.map(c => [c.lat, c.lng])), { padding: [60, 60], maxZoom: 14 });
+    document.getElementById('routeInfo').textContent = '🚗 ' + dist + ' 公里 · ⏱ ' + dur + ' 分钟';
+    document.getElementById('routeInfo').classList.add('visible');
+    showToast('路线规划完成：' + dist + 'km，约' + dur + '分钟');
+  } catch (e) { showToast('路线计算失败，请稍后重试'); }
 }
 
-// ==================== 城市切换 ====================
+function clearRouteLine() {
+  if (routePolyline) { map.removeLayer(routePolyline); routePolyline = null; }
+  routeLineMarkers.forEach(m => map.removeLayer(m));
+  routeLineMarkers = [];
+  document.getElementById('routeInfo').classList.remove('visible');
+}
+
+// ── Switch City ──
 function switchCity(cityName, lat, lng, zoom) {
   currentCity = { name: cityName, lat: lat, lng: lng, zoom: zoom || 12 };
-  saveData();
-
-  // 销毁旧搜索
-  destroyAutoComplete();
-  // 重建地图
+  saveData(); tryWriteSyncFile();
   initMap(lat, lng, zoom || 12);
-
-  renderMapMarkers();
-  updateCitySwitcher();
-  updateRoutePanel();
-  clearRouteDriving();
-  routeStops = [];
+  renderMapMarkers(); updateCitySwitcher(); updateRoutePanel(); clearRouteLine();
   fetchCityBoundary(cityName);
-
-  // 初始化搜索
-  setTimeout(() => initAutoComplete(), 500);
-
   isSheetExpanded = false;
   document.getElementById('bottomSheet').classList.add('collapsed');
   showToast('已切换到 ' + cityName);
@@ -1356,35 +1117,31 @@ function updateCitySwitcher() {
   if (addBtn) addBtn.addEventListener('click', showAddCityModal);
 }
 
-function showAddCityModal() {
+async function showAddCityModal() {
   showModal('🏙️ 添加城市',
     '<div class="modal-field"><div class="modal-label">城市名称</div><input class="modal-input" id="modalCityName" placeholder="例如：南京"></div>' +
     '<p style="font-size:11px;opacity:0.4;text-align:center;margin-top:8px;">系统会自动定位到该城市</p>' +
     '<div class="modal-btns">' +
     '<button class="modal-btn secondary" onclick="closeModal()">取消</button>' +
     '<button class="modal-btn primary" id="btnConfirmCity">定位城市</button></div>');
-  document.getElementById('btnConfirmCity').addEventListener('click', function() {
+  document.getElementById('btnConfirmCity').addEventListener('click', async function() {
     const cityName = document.getElementById('modalCityName').value.trim();
     if (!cityName) { showToast('请输入城市名'); return; }
-    // 使用高德 DistrictSearch 定位城市
-    const district = new AMap.DistrictSearch({ subdistrict: 0, extensions: 'base', level: 'city' });
-    district.search(cityName, function(status, result) {
-      if (status === 'complete' && result.districtList && result.districtList.length > 0) {
-        const d = result.districtList[0];
-        const c = { name: cityName, lat: d.center.lat, lng: d.center.lng, zoom: 12 };
-        if (!userCities.find(uc => uc.name === cityName)) userCities.push(c);
-        saveData();
-        closeModal();
-        switchCity(cityName, c.lat, c.lng, c.zoom);
-        renderWelcomeCities();
-      } else {
-        showToast('找不到这个城市，请换个写法试试');
-      }
-    });
+    try {
+      const resp = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(cityName + ', China') + '&limit=1&accept-language=zh', { headers: { 'User-Agent': 'QiumiMap/2.0' } });
+      const data = await resp.json();
+      if (data.length === 0) { showToast('找不到这个城市，请换个写法试试'); return; }
+      const c = { name: cityName, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), zoom: 12 };
+      if (!userCities.find(uc => uc.name === cityName)) userCities.push(c);
+      saveData(); tryWriteSyncFile();
+      closeModal();
+      switchCity(cityName, c.lat, c.lng, c.zoom);
+      renderWelcomeCities();
+    } catch (e) { showToast('定位失败，请重试'); }
   });
 }
 
-// ==================== 数据导入/导出 ====================
+// ── Data Import/Export ──
 function exportData() {
   const blob = new Blob([JSON.stringify(getFullDataPayload(), null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1425,9 +1182,8 @@ function importDataFile(file) {
 }
 
 function clearAll() {
-  if (!currentCity) { showToast('请先选择一个城市'); return; }
   showModal('⚠️ 清空确认',
-    '<p style="text-align:center;margin-bottom:12px;font-size:15px;">确定要清空「' + escHtml(currentCity.name) + '」的所有标记吗？</p>' +
+    '<p style="text-align:center;margin-bottom:12px;font-size:15px;">确定要清空「' + (currentCity ? escHtml(currentCity.name) : '') + '」的所有标记吗？</p>' +
     '<p style="text-align:center;font-size:12px;opacity:0.5;margin-bottom:18px;">建议先导出备份哦</p>' +
     '<div class="modal-btns">' +
     '<button class="modal-btn secondary" onclick="closeModal()">取消</button>' +
@@ -1435,9 +1191,73 @@ function clearAll() {
   document.getElementById('btnConfirmClear').addEventListener('click', function() {
     markersData = markersData.filter(m => m.city !== currentCity.name);
     routeStops = [];
-    saveData(); closeModal(); renderMapMarkers(); updateRoutePanel(); clearRouteDriving();
+    saveData(); closeModal(); renderMapMarkers(); updateRoutePanel(); clearRouteLine(); tryWriteSyncFile();
     showToast('已清空当前城市标记');
   });
+}
+
+// ============================================================
+//  SYNC — File-based + share-code multi-device sync
+// ============================================================
+
+const SYNC_STORAGE_KEY = 'qiumi_map_sync_path';
+let syncWriteTimeout = null;
+
+async function loadFromSyncFile() {
+  if (typeof window.showOpenFilePicker !== 'function') {
+    document.getElementById('syncFileLoadInput').click();
+    return;
+  }
+  try {
+    const [fileHandle] = await window.showOpenFilePicker({
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }], multiple: false
+    });
+    syncFileHandle = fileHandle;
+    localStorage.setItem(SYNC_STORAGE_KEY, '1');
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    if (importDataFromJSON(text, '同步加载')) showToast('从同步文件加载成功 ✅');
+  } catch (e) { if (e.name !== 'AbortError') showToast('打开同步文件失败'); }
+}
+
+async function saveToSyncFile() {
+  if (typeof window.showSaveFilePicker !== 'function') { exportData(); showToast('浏览器不支持直接保存到同步文件夹，已使用下载方式'); return; }
+  try {
+    if (syncFileHandle) {
+      try {
+        const writable = await syncFileHandle.createWritable();
+        await writable.write(JSON.stringify(getFullDataPayload(), null, 2));
+        await writable.close();
+        showToast('已保存到同步文件 ✅');
+        return;
+      } catch (e) { syncFileHandle = null; }
+    }
+    const handle = await window.showSaveFilePicker({
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+      suggestedName: 'QiumiMap_sync.json'
+    });
+    syncFileHandle = handle;
+    localStorage.setItem(SYNC_STORAGE_KEY, '1');
+    const writable = await handle.createWritable();
+    await writable.write(JSON.stringify(getFullDataPayload(), null, 2));
+    await writable.close();
+    showToast('已保存到同步文件 ✅ 把这个文件放到同步盘里即可多设备共享');
+  } catch (e) {
+    if (e.name !== 'AbortError') { exportData(); showToast('浏览器不支持直接保存，已使用下载方式'); }
+  }
+}
+
+function tryWriteSyncFile() {
+  if (!syncFileHandle) return;
+  clearTimeout(syncWriteTimeout);
+  syncWriteTimeout = setTimeout(async () => {
+    if (!syncFileHandle) return;
+    try {
+      const writable = await syncFileHandle.createWritable();
+      await writable.write(JSON.stringify(getFullDataPayload(), null, 2));
+      await writable.close();
+    } catch (e) { console.warn('Auto-sync write failed:', e.message); }
+  }, 2000);
 }
 
 function generateShareCode() {
@@ -1445,7 +1265,7 @@ function generateShareCode() {
     const code = btoa(unescape(encodeURIComponent(JSON.stringify(getFullDataPayload()))));
     showModal('🔗 分享码',
       '<div class="modal-field"><div class="modal-label">📋 分享码（复制完整内容）</div>' +
-      '<p style="font-size:11px;opacity:0.5;margin-bottom:8px;">在其他设备上打开此页面，使用"导入分享码"粘贴以下内容</p>' +
+      '<p style="font-size:11px;opacity:0.5;margin-bottom:8px;">在其他设备上打开此页面，点击"导入分享码"并粘贴以下内容</p>' +
       '<textarea class="modal-textarea code-area" id="shareCodeText" readonly style="min-height:120px;">' + escHtml(code) + '</textarea></div>' +
       '<div class="modal-btns">' +
       '<button class="modal-btn primary" id="btnCopyCode">📋 复制分享码</button>' +
@@ -1453,7 +1273,7 @@ function generateShareCode() {
     document.getElementById('btnCopyCode').addEventListener('click', function() {
       const ta = document.getElementById('shareCodeText'); ta.select();
       try { navigator.clipboard.writeText(ta.value).then(() => showToast('分享码已复制到剪贴板 ✅')); }
-      catch (e) { showToast('分享码已复制 ✅'); }
+      catch (e) { document.execCommand('copy'); showToast('分享码已复制 ✅'); }
     });
   } catch (e) { showToast('生成分享码失败，数据可能过大'); }
 }
@@ -1474,140 +1294,87 @@ function showImportShareCodeModal() {
   });
 }
 
-// ==================== FAB 点击 ====================
-function setupFab() {
-  const fab = document.getElementById('fabAdd');
-  if (!fab) return;
-  fab.addEventListener('click', function() {
-    if (!map || !currentCity) return;
-    showModal('📍 添加标记',
-      '<p style="text-align:center;font-size:14px;margin-bottom:18px;">选择添加方式：</p>' +
-      '<div class="modal-btns" style="flex-direction:column;gap:8px;">' +
-      '<button class="modal-btn primary" id="btnFabSearch">🔍 搜索地点</button>' +
-      '<button class="modal-btn secondary" id="btnFabLocate">📍 当前定位标记</button>' +
-      '<button class="modal-btn secondary" id="btnFabMap">🗺️ 点击地图标记</button>' +
-      '</div>');
-    document.getElementById('btnFabSearch').addEventListener('click', function() {
-      closeModal();
-      document.getElementById('searchInput').focus();
-      showToast('在搜索框中输入地点名称');
-    });
-    document.getElementById('btnFabLocate').addEventListener('click', function() {
-      closeModal();
-      // 使用高德 Geolocation 获取当前位置
-      AMap.plugin('AMap.Geolocation', function() {
-        const geolocation = new AMap.Geolocation({
-          enableHighAccuracy: true,
-          timeout: 10000,
-        });
-        geolocation.getCurrentPosition(function(status, result) {
-          if (status === 'complete' && result.position) {
-            const lng = result.position.lng;
-            const lat = result.position.lat;
-            map.setZoomAndCenter(16, [lng, lat]);
-            // 逆地理编码
-            const geocoder = new AMap.Geocoder();
-            geocoder.getAddress([lng, lat], function(s, r) {
-              const addr = (s === 'complete' && r.regeocode) ? r.regeocode.formattedAddress : '';
-              showAddModal(lng, lat, '', addr);
-            });
-          } else {
-            showToast('定位失败，请检查定位权限');
-          }
-        });
-      });
-    });
-    document.getElementById('btnFabMap').addEventListener('click', function() {
-      closeModal();
-      showToast('在地图上点击要标记的位置');
-    });
-  });
+function showSyncModal() {
+  const hasFSA = typeof window.showOpenFilePicker === 'function';
+  const fsaNote = hasFSA ? '' : '<p style="font-size:11px;opacity:0.5;margin-bottom:4px;">💡 你的浏览器支持文件系统直存，请选择以下方式</p>';
+  showModal('⟳ 多设备同步',
+    fsaNote +
+    '<p style="font-size:13px;margin-bottom:12px;text-align:center;color:var(--ink);opacity:0.7;">使用同步盘实现电脑和手机间数据共享</p>' +
+    '<div class="modal-btns" style="flex-direction:column;gap:8px;">' +
+    '<button class="modal-btn primary" id="btnSyncSaveModal">💾 保存到同步盘</button>' +
+    '<button class="modal-btn secondary" id="btnSyncLoadModal">📂 从同步盘加载</button>' +
+    '</div>' +
+    '<hr style="border:none;border-top:1px dashed var(--wheat);margin:14px 0;">' +
+    '<p style="font-size:13px;margin-bottom:8px;text-align:center;color:var(--ink);opacity:0.7;">或者用分享码直接传输：</p>' +
+    '<div class="modal-btns" style="flex-direction:column;gap:8px;">' +
+    '<button class="modal-btn secondary" id="btnShareCodeModal" style="color:var(--clay);border-color:var(--clay);">🔗 生成分享码</button>' +
+    '<button class="modal-btn secondary" id="btnImportCodeModal" style="color:var(--sky);border-color:var(--sky);">📥 导入分享码</button>' +
+    '</div>');
+  document.getElementById('btnSyncSaveModal').addEventListener('click', () => { closeModal(); saveToSyncFile(); });
+  document.getElementById('btnSyncLoadModal').addEventListener('click', () => { closeModal(); loadFromSyncFile(); });
+  document.getElementById('btnShareCodeModal').addEventListener('click', () => { closeModal(); generateShareCode(); });
+  document.getElementById('btnImportCodeModal').addEventListener('click', () => { closeModal(); showImportShareCodeModal(); });
 }
 
-// ==================== 事件绑定 ====================
+// ── Event Bindings ──
 function setupEvents() {
-  // 搜索输入框 - 高德 AutoComplete 会自动接管，这里保留 Enter 键处理
   const searchInput = document.getElementById('searchInput');
-  searchInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') { searchInput.value = ''; searchInput.blur(); }
+  searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => searchPlaces(searchInput.value.trim()), 300);
   });
-
-  // 顶部按钮
+  searchInput.addEventListener('focus', function() {
+    if (searchInput.value.trim().length >= 1) document.getElementById('searchResults').classList.add('active');
+  });
+  searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') searchPlaces(searchInput.value.trim()); });
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('searchWrapper').contains(e.target)) document.getElementById('searchResults').classList.remove('active');
+  });
   document.getElementById('btnAdd').addEventListener('click', function() {
     if (!map || !currentCity) return;
     showToast('在地图上点击要标记的位置');
+    map.once('click', function(e) { showAddModal(e.latlng.lat, e.latlng.lng, '', ''); });
   });
-
-  document.getElementById('btnData').addEventListener('click', () => {
-    document.getElementById('dataPanel').classList.toggle('visible');
-  });
-
+  document.getElementById('btnData').addEventListener('click', () => document.getElementById('dataPanel').classList.toggle('visible'));
   document.getElementById('btnRouteToggle').addEventListener('click', function() {
     isRouteMode = !isRouteMode;
     const btn = document.getElementById('btnRouteToggle');
-    if (isRouteMode) {
-      btn.style.background = 'var(--sage)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--sage)';
-      document.getElementById('routePanel').classList.add('visible');
-    } else {
-      btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = '';
-      if (routeStops.length === 0) document.getElementById('routePanel').classList.remove('visible');
-    }
+    if (isRouteMode) { btn.style.background = 'var(--sage)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--sage)'; document.getElementById('routePanel').classList.add('visible'); }
+    else { btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = ''; if (routeStops.length === 0) document.getElementById('routePanel').classList.remove('visible'); }
     renderMapMarkers(); updateRoutePanel();
   });
-
-  // 数据面板按钮
-  document.getElementById('btnExport').addEventListener('click', exportData);
-  document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFileInput').click());
+  document.getElementById('btnExport').addEventListener('click', () => { exportData(); });
+  document.getElementById('btnImport').addEventListener('click', () => { document.getElementById('importFileInput').click(); });
   document.getElementById('importFileInput').addEventListener('change', e => { if (e.target.files[0]) importDataFile(e.target.files[0]); });
-  document.getElementById('btnClearAll').addEventListener('click', clearAll);
-  document.getElementById('btnSyncCode').addEventListener('click', generateShareCode);
-  document.getElementById('btnImportCode').addEventListener('click', showImportShareCodeModal);
-
-  // 路线按钮
+  document.getElementById('btnClearAll').addEventListener('click', () => { clearAll(); });
+  document.getElementById('btnSyncLoad').addEventListener('click', () => { loadFromSyncFile(); });
+  document.getElementById('btnSyncSave').addEventListener('click', () => { saveToSyncFile(); });
+  document.getElementById('btnSyncCode').addEventListener('click', () => { generateShareCode(); });
+  document.getElementById('syncFileLoadInput').addEventListener('change', e => { if (e.target.files[0]) importDataFile(e.target.files[0]); });
+  document.getElementById('btnSync').addEventListener('click', showSyncModal);
   document.getElementById('btnPlanRoute').addEventListener('click', planRoute);
-  document.getElementById('btnClearRoute').addEventListener('click', () => {
-    routeStops = []; clearRouteDriving(); updateRoutePanel(); renderMapMarkers(); showToast('路线已清空');
-  });
-
-  // Logo 点击回首页
+  document.getElementById('btnClearRoute').addEventListener('click', () => { routeStops = []; clearRouteLine(); updateRoutePanel(); renderMapMarkers(); showToast('路线已清空'); });
   document.getElementById('topLogo').addEventListener('click', () => {
     document.getElementById('welcomeScreen').classList.remove('hidden');
     document.getElementById('appContainer').classList.remove('visible');
     currentCity = null; saveData();
-    if (map) { map.destroy(); map = null; mapMarkers = {}; cluster = null; }
-    clearCityBoundary(); destroyAutoComplete();
+    if (map) { map.remove(); map = null; }
+    clearCityBoundary();
     renderWelcomeCities();
   });
-
-  // 全局键盘事件
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      closeModal();
-      document.getElementById('dataPanel').classList.remove('visible');
-    }
-  });
-
-  // 窗口大小变化
-  window.addEventListener('resize', () => { if (map) map.resize(); });
-
-  // 检测移动端
-  isMobile = window.matchMedia('(max-width: 768px)').matches;
-  window.matchMedia('(max-width: 768px)').addEventListener('change', function(e) {
-    isMobile = e.matches;
+    if (e.key === 'Escape') { closeModal(); document.getElementById('searchResults').classList.remove('active'); document.getElementById('dataPanel').classList.remove('visible'); }
   });
 }
 
-// ==================== 全局暴露（供 InfoWindow 按钮调用） ====================
 window._addToRoute = addToRoute;
 window._editMarker = editMarker;
 window._deleteMarker = deleteMarker;
 
-// ==================== 初始化应用 ====================
 function initApp() {
   loadData();
   injectCatSVGs();
   setupSheet();
-  setupFab();
   setupEvents();
   renderWelcomeCities();
 
@@ -1618,36 +1385,31 @@ function initApp() {
     renderMapMarkers();
     updateCitySwitcher();
     fetchCityBoundary(currentCity.name);
-    setTimeout(() => initAutoComplete(), 500);
   }
 
-  // 自定义城市确认按钮
-
-  document.getElementById('customCityConfirm').addEventListener('click', function() {
+  document.getElementById('customCityConfirm').addEventListener('click', async function() {
     const cityName = document.getElementById('customCityInput').value.trim();
     if (!cityName) { showToast('请输入城市名'); return; }
-    const district = new AMap.DistrictSearch({ subdistrict: 0, extensions: 'base', level: 'city' });
-    district.search(cityName, function(status, result) {
-      if (status === 'complete' && result.districtList && result.districtList.length > 0) {
-        const d = result.districtList[0];
-        const c = { name: cityName, lat: d.center.lat, lng: d.center.lng, zoom: 12 };
-        if (!userCities.find(uc => uc.name === cityName)) { userCities.push(c); saveData(); }
-        document.getElementById('welcomeScreen').classList.add('hidden');
-        document.getElementById('appContainer').classList.add('visible');
-        switchCity(cityName, c.lat, c.lng, c.zoom);
-        renderWelcomeCities();
-      } else {
-        showToast('找不到这个城市，换个写法试试？');
-      }
-    });
+    try {
+      const resp = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(cityName + ', China') + '&limit=1&accept-language=zh', { headers: { 'User-Agent': 'QiumiMap/2.0' } });
+      const data = await resp.json();
+      if (data.length === 0) { showToast('找不到这个城市，换个写法试试？'); return; }
+      const c = { name: cityName, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), zoom: 12 };
+      if (!userCities.find(uc => uc.name === cityName)) { userCities.push(c); saveData(); }
+      document.getElementById('welcomeScreen').classList.add('hidden');
+      document.getElementById('appContainer').classList.add('visible');
+      switchCity(cityName, c.lat, c.lng, c.zoom);
+      renderWelcomeCities();
+    } catch (e) { showToast('定位失败，请检查网络'); }
   });
 
   document.getElementById('customCityInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') document.getElementById('customCityConfirm').click();
   });
+
+  window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
 }
 
-// 启动
 document.addEventListener('DOMContentLoaded', initApp);
 
 })();

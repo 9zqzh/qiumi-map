@@ -1,0 +1,21 @@
+# API Key / secrets - 绝对不要提交
+*key*.txt
+*secret*.txt
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Editor
+.vscode/
+.idea/
+
+# Node
+node_modules/
+
+# Build output
+dist/
